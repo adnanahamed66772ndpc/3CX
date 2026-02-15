@@ -10,13 +10,17 @@ import {
   ListItem,
   ListItemText,
   Chip,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useState } from 'react';
 import { getCall, getCallEvents, postAriCallsHangup } from '../api/client';
 import { useSnackbar } from 'notistack';
 
 export default function CallDetail() {
   const { callId } = useParams<{ callId: string }>();
+  const [tab, setTab] = useState(0);
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
 
@@ -65,45 +69,55 @@ export default function CallDetail() {
       <Typography variant="h5" gutterBottom>
         Call {callId}
       </Typography>
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Typography variant="body2" color="textSecondary">
-            Status: <Chip label={call.status} size="small" /> | A: {call.a_endpoint ?? '-'} | B: {call.b_endpoint ?? '-'}
+      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
+        <Tab label="Call" />
+        <Tab label="Events" />
+      </Tabs>
+      {tab === 0 && (
+        <Card sx={{ mb: 2 }}>
+          <CardContent>
+            <Typography variant="body2" color="textSecondary">
+              Status: <Chip label={call.status} size="small" /> | A: {call.a_endpoint ?? '-'} | B: {call.b_endpoint ?? '-'}
+            </Typography>
+            <Typography variant="body2">
+              Started: {call.started_at ? new Date(call.started_at).toLocaleString() : '-'} | Ended:{' '}
+              {call.ended_at ? new Date(call.ended_at).toLocaleString() : '-'}
+            </Typography>
+            {canHangup && (
+              <Button color="error" variant="outlined" onClick={handleHangup} sx={{ mt: 1 }}>
+                Hangup
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+      {tab === 1 && (
+        <>
+          <Typography variant="h6" gutterBottom>
+            Event timeline
           </Typography>
-          <Typography variant="body2">
-            Started: {call.started_at ? new Date(call.started_at).toLocaleString() : '-'} | Ended:{' '}
-            {call.ended_at ? new Date(call.ended_at).toLocaleString() : '-'}
-          </Typography>
-          {canHangup && (
-            <Button color="error" variant="outlined" onClick={handleHangup} sx={{ mt: 1 }}>
-              Hangup
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-      <Typography variant="h6" gutterBottom>
-        Event timeline
-      </Typography>
-      {eventsLoading && <Typography>Loading events...</Typography>}
-      <List dense>
-        {(events || []).map((ev) => (
-          <ListItem key={ev.id}>
-            <ListItemText
-              primary={
-                <>
-                  <Chip label={ev.source} size="small" sx={{ mr: 1 }} />
-                  {ev.event_type} @ {new Date(ev.event_time).toLocaleString()}
-                </>
-              }
-              secondary={
-                <Box component="pre" sx={{ fontSize: 12, overflow: 'auto', maxHeight: 120 }}>
-                  {JSON.stringify(ev.payload_json, null, 2)}
-                </Box>
-              }
-            />
-          </ListItem>
-        ))}
-      </List>
+          {eventsLoading && <Typography>Loading events...</Typography>}
+          <List dense>
+            {(events || []).map((ev) => (
+              <ListItem key={ev.id}>
+                <ListItemText
+                  primary={
+                    <>
+                      <Chip label={ev.source} size="small" sx={{ mr: 1 }} />
+                      {ev.event_type} @ {new Date(ev.event_time).toLocaleString()}
+                    </>
+                  }
+                  secondary={
+                    <Box component="pre" sx={{ fontSize: 12, overflow: 'auto', maxHeight: 120 }}>
+                      {JSON.stringify(ev.payload_json, null, 2)}
+                    </Box>
+                  }
+                />
+              </ListItem>
+            ))}
+          </List>
+        </>
+      )}
     </Box>
   );
 }
