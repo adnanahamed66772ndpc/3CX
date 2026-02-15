@@ -1,4 +1,18 @@
-const BASE = import.meta.env.VITE_API_URL || '';
+/** Resolve API base URL. Use current host when accessed remotely (avoids CORS / private network block). */
+function getApiBase(): string {
+  const env = import.meta.env.VITE_API_URL || '';
+  if (typeof window !== 'undefined') {
+    const isLocalhost = /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(window.location.host);
+    const envIsLocalhost = env && /localhost|127\.0\.0\.1/.test(env);
+    if (envIsLocalhost && !isLocalhost) {
+      return `${window.location.protocol}//${window.location.hostname}:3000`;
+    }
+    return env || `${window.location.protocol}//${window.location.hostname}:3000`;
+  }
+  return env;
+}
+
+const BASE = getApiBase();
 
 export interface Call {
   call_id: string;
@@ -177,11 +191,12 @@ export async function putAsteriskSettings(data: AsteriskSettingsInput): Promise<
 }
 
 export function getLiveWsUrl(): string {
-  const base = import.meta.env.VITE_API_URL || '';
+  const base = BASE;
   if (base) {
     const wsBase = base.replace(/^http/, 'ws');
     return `${wsBase}/api/live`;
   }
-  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${proto}//${window.location.host}/api/live`;
+  const proto = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+  return `${proto}//${host}:3000/api/live`;
 }
