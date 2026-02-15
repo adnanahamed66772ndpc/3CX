@@ -14,6 +14,7 @@ import sshRoutes from './routes/ssh';
 import cdrRoutes from './routes/cdr';
 import pool from './db/pool';
 import * as repoCdr from './db/repoCdr';
+import { runBaseMigrations } from './db/runMigrations';
 
 const app = express();
 app.use(cors());
@@ -49,6 +50,7 @@ async function main() {
     process.exit(1);
   });
 
+  await runBaseMigrations(pool);
   await repoCdr.ensureCdrTable(pool);
 
   const ariCfg = await import('./config/asteriskConfig').then((m) => m.getAriConfig());
