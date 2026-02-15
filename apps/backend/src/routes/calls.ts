@@ -13,8 +13,9 @@ router.get('/', async (req: Request, res: Response) => {
     const calls = await repoCalls.listCalls(pool, { from, to, status });
     res.json(calls);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to list calls' });
+    console.error('GET /api/calls error:', err);
+    const message = err instanceof Error ? err.message : 'Failed to list calls';
+    res.status(500).json({ error: 'Failed to list calls', message });
   }
 });
 

@@ -30,17 +30,27 @@ router.put('/asterisk', async (req: Request, res: Response) => {
     const [ariCfg, amiCfg] = cfg;
 
     if (ariCfg) {
-      await ariClient.stopAriClient();
-      await ariClient.startAriClient(ariCfg).catch((e) => console.error('ARI reconnect failed:', e));
+      try {
+        await ariClient.stopAriClient();
+        ariClient.startAriClient(ariCfg).catch((e) => console.error('ARI reconnect failed:', e));
+      } catch (e) {
+        console.error('ARI stop/start error:', e);
+      }
     }
     if (amiCfg) {
-      await amiClient.stopAmiClient();
-      await amiClient.startAmiClient(amiCfg).catch((e) => console.error('AMI reconnect failed:', e));
+      try {
+        await amiClient.stopAmiClient();
+        amiClient.startAmiClient(amiCfg).catch((e) => console.error('AMI reconnect failed:', e));
+      } catch (e) {
+        console.error('AMI stop/start error:', e);
+      }
     }
 
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err instanceof Error ? err.message : 'Failed to save settings' });
+    console.error('PUT /api/settings/asterisk error:', err);
+    const message = err instanceof Error ? err.message : 'Failed to save settings';
+    res.status(500).json({ error: 'Failed to save settings', message });
   }
 });
 
