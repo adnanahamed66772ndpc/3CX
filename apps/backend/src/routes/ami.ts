@@ -1,7 +1,27 @@
 import { Router, Request, Response } from 'express';
+import AmiClient from 'asterisk-ami-client';
 import * as amiClient from '../ami/amiClient';
+import { getAmiConfig } from '../config/asteriskConfig';
 
 const router = Router();
+
+/** Test AMI connection by connecting and disconnecting. */
+router.post('/test', async (_req: Request, res: Response) => {
+  try {
+    const cfg = await getAmiConfig();
+    if (!cfg?.amiUser || !cfg?.amiPass) {
+      return res.status(400).json({ error: 'AMI not configured. Set AMI host, user and password in Settings.' });
+    }
+    const client = new AmiClient({ reconnect: false });
+    await client.connect(cfg.amiUser, cfg.amiPass, { host: cfg.amiHost, port: cfg.amiPort });
+    const c = client as unknown as { disconnect?: () => void };
+    if (typeof c.disconnect === 'function') c.disconnect();
+    res.json({ ok: true, message: 'Connected' });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: msg });
+  }
+});
 
 router.post('/calls', async (req: Request, res: Response) => {
   try {

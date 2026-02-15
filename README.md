@@ -86,8 +86,10 @@ Copy `.env.example` to `.env` and set `ARI_*`, `AMI_*`, `MYSQL_*`. For local MyS
 | GET    | `/api/calls/:id/events` | Call events                    |
 | GET    | `/api/stats`            | Dashboard stats                |
 | GET    | `/api/health`           | Health check                   |
+| POST   | `/api/ari/test`         | Test ARI connection            |
 | POST   | `/api/ari/calls`        | ARI originate                  |
 | POST   | `/api/ari/calls/:id/hangup` | ARI hangup                |
+| POST   | `/api/ami/test`         | Test AMI connection            |
 | POST   | `/api/ami/calls`        | AMI originate                  |
 | POST   | `/api/ami/hangup`       | AMI hangup                     |
 | GET    | `/api/settings/asterisk`| ARI/AMI/SSH settings           |

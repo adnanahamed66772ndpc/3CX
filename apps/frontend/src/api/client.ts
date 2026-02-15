@@ -166,6 +166,20 @@ export async function getAsteriskSettings(): Promise<AsteriskSettingsDisplay | n
   return text ? (JSON.parse(text) as AsteriskSettingsDisplay | null) : null;
 }
 
+export async function postAriTest(): Promise<{ ok: boolean; applications?: number }> {
+  const res = await fetch(`${BASE}/api/ari/test`, { method: 'POST' });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((data as { error?: string }).error || 'ARI test failed');
+  return data;
+}
+
+export async function postAmiTest(): Promise<{ ok: boolean; message?: string }> {
+  const res = await fetch(`${BASE}/api/ami/test`, { method: 'POST' });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((data as { error?: string }).error || 'AMI test failed');
+  return data;
+}
+
 export async function postSshTest(): Promise<{ ok: boolean; stdout?: string; stderr?: string }> {
   const res = await fetch(`${BASE}/api/ssh/test`, { method: 'POST' });
   const data = await res.json().catch(() => ({}));

@@ -14,12 +14,14 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import {
   getAsteriskSettings,
   putAsteriskSettings,
+  postAriTest,
+  postAmiTest,
   postSshTest,
   type AsteriskSettingsDisplay,
   type AsteriskSettingsInput,
 } from '../api/client';
 
-type SshTestStatus = 'idle' | 'testing' | 'connected' | 'failed';
+type TestStatus = 'idle' | 'testing' | 'connected' | 'failed';
 
 export default function Settings() {
   const { enqueueSnackbar } = useSnackbar();
@@ -27,7 +29,11 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<AsteriskSettingsInput>({});
   const [initial, setInitial] = useState<AsteriskSettingsDisplay | null>(null);
-  const [sshTestStatus, setSshTestStatus] = useState<SshTestStatus>('idle');
+  const [ariTestStatus, setAriTestStatus] = useState<TestStatus>('idle');
+  const [ariTestMessage, setAriTestMessage] = useState<string>('');
+  const [amiTestStatus, setAmiTestStatus] = useState<TestStatus>('idle');
+  const [amiTestMessage, setAmiTestMessage] = useState<string>('');
+  const [sshTestStatus, setSshTestStatus] = useState<TestStatus>('idle');
   const [sshTestMessage, setSshTestMessage] = useState<string>('');
 
   useEffect(() => {
@@ -152,6 +158,42 @@ export default function Settings() {
               onChange={(e) => setData((d) => ({ ...d, ari_app: e.target.value }))}
               placeholder="myapp"
             />
+            <Stack direction="row" alignItems="center" spacing={2}>
+              <Button
+                variant="outlined"
+                size="small"
+                disabled={ariTestStatus === 'testing'}
+                onClick={async () => {
+                  setAriTestStatus('testing');
+                  setAriTestMessage('');
+                  try {
+                    await putAsteriskSettings({
+                      ari_url: data.ari_url || undefined,
+                      ari_user: data.ari_user || undefined,
+                      ari_pass: data.ari_pass || undefined,
+                      ari_app: data.ari_app || undefined,
+                    });
+                    const r = await postAriTest();
+                    setAriTestStatus('connected');
+                    setAriTestMessage(r.applications != null ? `${r.applications} app(s)` : 'OK');
+                    enqueueSnackbar('ARI connected', { variant: 'success' });
+                  } catch (e) {
+                    const msg = e instanceof Error ? e.message : 'ARI test failed';
+                    setAriTestStatus('failed');
+                    setAriTestMessage(msg);
+                    enqueueSnackbar(msg, { variant: 'error' });
+                  }
+                }}
+              >
+                {ariTestStatus === 'testing' ? 'Testing...' : 'Test ARI'}
+              </Button>
+              {ariTestStatus === 'connected' && (
+                <Typography component="span" color="success.main">✅ Connected {ariTestMessage && `(${ariTestMessage})`}</Typography>
+              )}
+              {ariTestStatus === 'failed' && (
+                <Typography component="span" color="error.main">❌ Failed: {ariTestMessage}</Typography>
+              )}
+            </Stack>
           </Stack>
         </CardContent>
       </Card>
@@ -196,6 +238,42 @@ export default function Settings() {
               placeholder={initial?.ami_pass_set ? '•••••••• (unchanged)' : ''}
               helperText={initial?.ami_pass_set ? 'Leave blank to keep current' : undefined}
             />
+            <Stack direction="row" alignItems="center" spacing={2}>
+              <Button
+                variant="outlined"
+                size="small"
+                disabled={amiTestStatus === 'testing'}
+                onClick={async () => {
+                  setAmiTestStatus('testing');
+                  setAmiTestMessage('');
+                  try {
+                    await putAsteriskSettings({
+                      ami_host: data.ami_host || undefined,
+                      ami_port: data.ami_port,
+                      ami_user: data.ami_user || undefined,
+                      ami_pass: data.ami_pass || undefined,
+                    });
+                    const r = await postAmiTest();
+                    setAmiTestStatus('connected');
+                    setAmiTestMessage(r.message || 'OK');
+                    enqueueSnackbar('AMI connected', { variant: 'success' });
+                  } catch (e) {
+                    const msg = e instanceof Error ? e.message : 'AMI test failed';
+                    setAmiTestStatus('failed');
+                    setAmiTestMessage(msg);
+                    enqueueSnackbar(msg, { variant: 'error' });
+                  }
+                }}
+              >
+                {amiTestStatus === 'testing' ? 'Testing...' : 'Test AMI'}
+              </Button>
+              {amiTestStatus === 'connected' && (
+                <Typography component="span" color="success.main">✅ Connected {amiTestMessage && `(${amiTestMessage})`}</Typography>
+              )}
+              {amiTestStatus === 'failed' && (
+                <Typography component="span" color="error.main">❌ Failed: {amiTestMessage}</Typography>
+              )}
+            </Stack>
           </Stack>
         </CardContent>
       </Card>

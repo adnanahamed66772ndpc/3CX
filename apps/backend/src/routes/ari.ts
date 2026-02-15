@@ -1,7 +1,33 @@
 import { Router, Request, Response } from 'express';
 import * as ariClient from '../ari/ariClient';
+import { getAriConfig } from '../config/asteriskConfig';
 
 const router = Router();
+
+/** Test ARI connection by fetching /ari/applications with Basic auth. */
+router.post('/test', async (_req: Request, res: Response) => {
+  try {
+    const cfg = await getAriConfig();
+    if (!cfg?.ariUser || !cfg?.ariPass) {
+      return res.status(400).json({ error: 'ARI not configured. Set ARI URL, user and password in Settings.' });
+    }
+    const baseUrl = cfg.ariUrl.replace(/\/$/, '');
+    const url = baseUrl.includes('/ari') ? `${baseUrl}/applications` : `${baseUrl}/ari/applications`;
+    const auth = Buffer.from(`${cfg.ariUser}:${cfg.ariPass}`).toString('base64');
+    const r = await fetch(url, {
+      headers: { Authorization: `Basic ${auth}` },
+    });
+    if (!r.ok) {
+      const text = await r.text();
+      throw new Error(text || `HTTP ${r.status}`);
+    }
+    const apps = await r.json();
+    res.json({ ok: true, applications: Array.isArray(apps) ? apps.length : 0 });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: msg });
+  }
+});
 
 router.post('/calls', async (req: Request, res: Response) => {
   try {
