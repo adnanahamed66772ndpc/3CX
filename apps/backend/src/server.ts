@@ -33,7 +33,22 @@ attachWebSocketServer(server);
 
 const PORT = Number(process.env.PORT || 3000);
 
+/** ARI/swagger-client throws on 401 instead of rejecting; prevent process exit. */
+function isAriConnectError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message + (err.stack ?? '') : String(err);
+  return /401|unauthorized/i.test(msg) && /ari|resources\.json|api-docs/i.test(msg);
+}
+
 async function main() {
+  process.on('uncaughtException', (err: Error) => {
+    if (isAriConnectError(err)) {
+      console.error('ARI connection failed (check URL and credentials in Settings). Continuing without ARI.');
+      return;
+    }
+    console.error('Uncaught exception:', err);
+    process.exit(1);
+  });
+
   await repoCdr.ensureCdrTable(pool);
 
   const ariCfg = await import('./config/asteriskConfig').then((m) => m.getAriConfig());
