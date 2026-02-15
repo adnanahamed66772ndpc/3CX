@@ -73,4 +73,16 @@ The server must be able to clone:
 ```bash
 ssh user@your-server "cd /opt/astriks && sudo docker compose ps"
 ```
-okey 
+
+## 6. If /api/calls returns 500 after a deploy
+
+The backend image may be cached. On the server, force a clean rebuild and restart:
+
+```bash
+cd /opt/astriks
+git pull
+sudo docker compose build backend --no-cache
+sudo docker compose up -d
+```
+
+Then check the Calls page again; the red error message will show the server error if it still fails.

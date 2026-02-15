@@ -63,6 +63,7 @@ jobs:
 
             # Deploy with Docker (use sudo for current session after fresh install)
             sudo docker compose pull --quiet 2>/dev/null || true
+            sudo docker compose build backend --no-cache
             sudo docker compose up -d --build
 
             echo "=== Deploy complete ==="
