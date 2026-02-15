@@ -66,7 +66,9 @@ export default function Calls() {
         />
       </Stack>
       {error && (
-        <Typography color="error">Error loading calls</Typography>
+        <Typography color="error" sx={{ mb: 1 }}>
+          Error loading calls: {error instanceof Error ? error.message : String(error)}
+        </Typography>
       )}
       <Box sx={{ height: 500, width: '100%' }}>
         <DataGrid

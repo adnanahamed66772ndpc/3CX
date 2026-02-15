@@ -14,6 +14,22 @@ function getApiBase(): string {
 
 const BASE = getApiBase();
 
+/** Parse response; on HTTP error throw with server message if present. */
+async function parseResponse<T>(res: Response): Promise<T> {
+  const text = await res.text();
+  if (!res.ok) {
+    let msg = text;
+    try {
+      const j = JSON.parse(text) as { message?: string; error?: string };
+      msg = j.message || j.error || msg;
+    } catch {
+      /* use text */
+    }
+    throw new Error(msg);
+  }
+  return (text ? JSON.parse(text) : null) as T;
+}
+
 export interface Call {
   call_id: string;
   status: string;
@@ -49,20 +65,17 @@ export async function getCalls(params: { from?: string; to?: string; status?: st
   if (params.to) sp.set('to', params.to);
   if (params.status) sp.set('status', params.status);
   const res = await fetch(`${BASE}/api/calls?${sp}`);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return parseResponse<Call[]>(res);
 }
 
 export async function getCall(callId: string): Promise<Call> {
   const res = await fetch(`${BASE}/api/calls/${callId}`);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return parseResponse<Call>(res);
 }
 
 export async function getCallEvents(callId: string): Promise<CallEvent[]> {
   const res = await fetch(`${BASE}/api/calls/${callId}/events`);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return parseResponse<CallEvent[]>(res);
 }
 
 export interface CdrRow {
