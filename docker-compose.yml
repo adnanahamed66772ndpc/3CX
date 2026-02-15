@@ -1,0 +1,63 @@
+services:
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: telephony
+      MYSQL_USER: telephony
+      MYSQL_PASSWORD: telephony
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./migrations/001_initial.sql:/docker-entrypoint-initdb.d/001_initial.sql
+      - ./migrations/002_asterisk_settings.sql:/docker-entrypoint-initdb.d/002_asterisk_settings.sql
+      - ./migrations/003_asterisk_settings_ssh.sql:/docker-entrypoint-initdb.d/003_asterisk_settings_ssh.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: telephony
+      MYSQL_PASS: telephony
+      MYSQL_DB: telephony
+      ARI_URL: ${ARI_URL:-http://host.docker.internal:8088}
+      ARI_USER: ${ARI_USER:-}
+      ARI_PASS: ${ARI_PASS:-}
+      ARI_APP: ${ARI_APP:-myapp}
+      AMI_HOST: ${AMI_HOST:-host.docker.internal}
+      AMI_PORT: ${AMI_PORT:-5038}
+      AMI_USER: ${AMI_USER:-}
+      AMI_PASS: ${AMI_PASS:-}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+      target: dev
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:3000
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

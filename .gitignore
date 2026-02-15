@@ -1,0 +1,7 @@
+node_modules/
+.env
+temp-credentials.local.txt
+dist/
+coverage/
+*.log
+.DS_Store

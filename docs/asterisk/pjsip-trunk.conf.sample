@@ -1,0 +1,40 @@
+; SIP Trunk + DID - merge into /etc/asterisk/pjsip.conf
+; Replace YOUR_* placeholders with values from your VoIP provider.
+
+; --- Registration (provider uses registration auth) ---
+[mytrunk-reg]
+type=registration
+transport=transport-udp
+outbound_auth=mytrunk-auth
+server_uri=sip:YOUR_PROVIDER_SERVER
+client_uri=sip:YOUR_USERNAME@YOUR_PROVIDER_SERVER
+retry_interval=60
+
+[mytrunk-auth]
+type=auth
+auth_type=userpass
+password=YOUR_TRUNK_PASSWORD
+username=YOUR_TRUNK_USERNAME
+
+; --- Trunk endpoint ---
+[mytrunk]
+type=endpoint
+context=from-trunk
+disallow=all
+allow=ulaw
+allow=alaw
+outbound_auth=mytrunk-auth
+aors=mytrunk-aor
+direct_media=no
+from_domain=YOUR_PROVIDER_SERVER
+
+[mytrunk-aor]
+type=aor
+contact=sip:YOUR_PROVIDER_SERVER
+qualify_frequency=60
+
+; --- Identify inbound calls (provider's SIP server IP or host) ---
+[mytrunk-identify]
+type=identify
+endpoint=mytrunk
+match=YOUR_PROVIDER_IP
