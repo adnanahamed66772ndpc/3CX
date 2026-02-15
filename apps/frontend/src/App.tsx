@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Calls from './pages/Calls';
 import CallDetail from './pages/CallDetail';
+import CallHistory from './pages/CallHistory';
 import Actions from './pages/Actions';
 import LiveEvents from './pages/LiveEvents';
 import Settings from './pages/Settings';
@@ -20,6 +21,7 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="calls" element={<Calls />} />
             <Route path="calls/:callId" element={<CallDetail />} />
+            <Route path="cdr" element={<CallHistory />} />
             <Route path="actions" element={<Actions />} />
             <Route path="live" element={<LiveEvents />} />
             <Route path="settings" element={<Settings />} />

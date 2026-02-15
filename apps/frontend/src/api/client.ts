@@ -65,6 +65,30 @@ export async function getCallEvents(callId: string): Promise<CallEvent[]> {
   return res.json();
 }
 
+export interface CdrRow {
+  id: number;
+  uniqueid: string;
+  calldate: string;
+  src: string | null;
+  dst: string | null;
+  duration: number;
+  billsec: number;
+  disposition: string | null;
+  channel: string | null;
+  dstchannel: string | null;
+  created_at: string;
+}
+
+export async function getCdr(params: { from?: string; to?: string; limit?: number }): Promise<CdrRow[]> {
+  const sp = new URLSearchParams();
+  if (params.from) sp.set('from', params.from);
+  if (params.to) sp.set('to', params.to);
+  if (params.limit != null) sp.set('limit', String(params.limit));
+  const res = await fetch(`${BASE}/api/cdr?${sp}`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function getStats(): Promise<Stats> {
   const res = await fetch(`${BASE}/api/stats`);
   if (!res.ok) throw new Error(await res.text());

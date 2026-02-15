@@ -2,6 +2,7 @@ import AmiClient from 'asterisk-ami-client';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../db/pool';
 import * as repoCalls from '../db/repoCalls';
+import * as repoCdr from '../db/repoCdr';
 import * as repoEvents from '../db/repoEvents';
 import { broadcastEvent, getLiveEventPayload } from '../realtime/ws';
 import type { AmiConfig } from '../config/asteriskConfig';
@@ -35,6 +36,30 @@ export async function startAmiClient(config?: AmiConfig | null): Promise<void> {
   client.on('event', async (evt: unknown) => {
     const e = evt as Record<string, unknown>;
     const eventType = (e.Event || e.event || 'UnknownEvent') as string;
+    if (eventType === 'Cdr') {
+      const uniqueid = (e.Uniqueid ?? e.uniqueid) as string | undefined;
+      if (uniqueid) {
+        const startTime = (e.StartTime ?? e.starttime ?? e.AnswerTime ?? e.answertime) as string | undefined;
+        const calldate = startTime ? new Date(startTime) : new Date();
+        if (!Number.isNaN(calldate.getTime())) {
+          try {
+            await repoCdr.insertCdr(pool, {
+              uniqueid,
+              calldate,
+              src: (e.Source ?? e.CallerID ?? e.callerid) as string | null,
+              dst: (e.Destination ?? e.destination) as string | null,
+              duration: Number(e.Duration ?? e.duration ?? 0) || 0,
+              billsec: Number(e.BillableSeconds ?? e.billsec ?? 0) || 0,
+              disposition: (e.Disposition ?? e.disposition) as string | null,
+              channel: (e.Channel ?? e.channel) as string | null,
+              dstchannel: (e.DestinationChannel ?? e.destinationchannel) as string | null,
+            });
+          } catch (err) {
+            console.error('CDR insert failed:', err);
+          }
+        }
+      }
+    }
     const callId = await repoCalls.resolveCallIdFromAsteriskIds(
       pool,
       (e.Uniqueid as string) || null,

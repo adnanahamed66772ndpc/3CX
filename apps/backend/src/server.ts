@@ -11,12 +11,16 @@ import healthRoutes from './routes/health';
 import statsRoutes from './routes/stats';
 import settingsRoutes from './routes/settings';
 import sshRoutes from './routes/ssh';
+import cdrRoutes from './routes/cdr';
+import pool from './db/pool';
+import * as repoCdr from './db/repoCdr';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 app.use('/api/calls', callsRoutes);
+app.use('/api/cdr', cdrRoutes);
 app.use('/api/ari', ariRoutes);
 app.use('/api/ami', amiRoutes);
 app.use('/api/settings', settingsRoutes);
@@ -30,6 +34,8 @@ attachWebSocketServer(server);
 const PORT = Number(process.env.PORT || 3000);
 
 async function main() {
+  await repoCdr.ensureCdrTable(pool);
+
   const ariCfg = await import('./config/asteriskConfig').then((m) => m.getAriConfig());
   const amiCfg = await import('./config/asteriskConfig').then((m) => m.getAmiConfig());
   if (ariCfg) {

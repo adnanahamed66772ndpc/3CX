@@ -15,6 +15,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import CallIcon from '@mui/icons-material/Call';
 import TouchAppIcon from '@mui/icons-material/TouchApp';
 import LiveTvIcon from '@mui/icons-material/LiveTv';
+import HistoryIcon from '@mui/icons-material/History';
 import SettingsIcon from '@mui/icons-material/Settings';
 
 const drawerWidth = 220;
@@ -22,6 +23,7 @@ const drawerWidth = 220;
 const nav = [
   { path: '/dashboard', label: 'Dashboard', icon: <DashboardIcon /> },
   { path: '/calls', label: 'Calls', icon: <CallIcon /> },
+  { path: '/cdr', label: 'Call history', icon: <HistoryIcon /> },
   { path: '/actions', label: 'Actions', icon: <TouchAppIcon /> },
   { path: '/live', label: 'Live events', icon: <LiveTvIcon /> },
   { path: '/settings', label: 'Settings', icon: <SettingsIcon /> },
