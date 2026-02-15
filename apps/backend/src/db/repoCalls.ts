@@ -153,9 +153,9 @@ export async function listCalls(
     conditions.push('status = ?');
     params.push(filters.status);
   }
-  params.push(limit);
+  const safeLimit = Math.min(Math.max(1, Number(limit) || 200), 1000);
   const [rows] = await pool.execute<RowDataPacket[]>(
-    `SELECT * FROM calls WHERE ${conditions.join(' AND ')} ORDER BY started_at DESC LIMIT ?`,
+    `SELECT * FROM calls WHERE ${conditions.join(' AND ')} ORDER BY started_at DESC LIMIT ${safeLimit}`,
     params
   );
   return (rows || []).map(rowToCall);
