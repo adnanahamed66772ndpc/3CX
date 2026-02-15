@@ -25,17 +25,28 @@ export default function Dashboard() {
         Dashboard
       </Typography>
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={3}>
           <Card>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
-                Active calls
+                Active calls (DB)
               </Typography>
               <Typography variant="h4">{stats.activeCalls}</Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={3}>
+          <Card>
+            <CardContent>
+              <Typography color="textSecondary" gutterBottom>
+                Live calls (AMI)
+              </Typography>
+              <Typography variant="h4">{stats.amiActiveCalls ?? '—'}</Typography>
+              <Typography variant="caption" color="textSecondary">Event-based count</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={3}>
           <Card>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
@@ -45,7 +56,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={3}>
           <Card>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>

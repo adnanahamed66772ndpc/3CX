@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import type { RowDataPacket } from 'mysql2/promise';
 import pool from '../db/pool';
+import { getAmiActiveCallCount } from '../ami/amiClient';
 
 const router = Router();
 
@@ -30,6 +31,7 @@ router.get('/', async (_req: Request, res: Response) => {
 
     res.json({
       activeCalls: (activeRows?.[0] as { count: number })?.count ?? 0,
+      amiActiveCalls: getAmiActiveCallCount(),
       callsToday: (todayRows?.[0] as { count: number })?.count ?? 0,
       failuresToday: (failRows?.[0] as { count: number })?.count ?? 0,
       callsPerHour: (hourRows as { hour_bucket: string; cnt: number }[]) || [],

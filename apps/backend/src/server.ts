@@ -11,6 +11,7 @@ import healthRoutes from './routes/health';
 import statsRoutes from './routes/stats';
 import settingsRoutes from './routes/settings';
 import sshRoutes from './routes/ssh';
+import asteriskRoutes from './routes/asterisk';
 import cdrRoutes from './routes/cdr';
 import pool from './db/pool';
 import * as repoCdr from './db/repoCdr';
@@ -26,6 +27,7 @@ app.use('/api/ari', ariRoutes);
 app.use('/api/ami', amiRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/ssh', sshRoutes);
+app.use('/api/asterisk', asteriskRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/stats', statsRoutes);
 

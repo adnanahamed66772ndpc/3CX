@@ -54,6 +54,7 @@ export interface CallEvent {
 
 export interface Stats {
   activeCalls: number;
+  amiActiveCalls?: number;
   callsToday: number;
   failuresToday: number;
   callsPerHour: { hour_bucket: string; cnt: number }[];
@@ -106,6 +107,17 @@ export async function getStats(): Promise<Stats> {
   const res = await fetch(`${BASE}/api/stats`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
+}
+
+export interface AsteriskChannelStats {
+  activeChannels: number;
+  activeCalls: number;
+  callsProcessed: number;
+}
+
+export async function getAsteriskChannelStats(): Promise<AsteriskChannelStats> {
+  const res = await fetch(`${BASE}/api/asterisk/channel-stats`);
+  return parseResponse<AsteriskChannelStats>(res);
 }
 
 export async function postAriCalls(body: {

@@ -9,6 +9,27 @@ import type { AmiConfig } from '../config/asteriskConfig';
 
 let amiClientInstance: AmiClient | null = null;
 
+/** Linkedid (or uniqueid) -> number of channels still up. Active calls = number of keys with count > 0. */
+const activeChannelsByCall = new Map<string, number>();
+
+export function getAmiActiveCallCount(): number {
+  return activeChannelsByCall.size;
+}
+
+function trackChannelUp(linkedid: string | null, uniqueid: string | null): void {
+  const key = linkedid || uniqueid || '';
+  if (!key) return;
+  activeChannelsByCall.set(key, (activeChannelsByCall.get(key) ?? 0) + 1);
+}
+
+function trackChannelDown(linkedid: string | null, uniqueid: string | null): void {
+  const key = linkedid || uniqueid || '';
+  if (!key) return;
+  const n = (activeChannelsByCall.get(key) ?? 1) - 1;
+  if (n <= 0) activeChannelsByCall.delete(key);
+  else activeChannelsByCall.set(key, n);
+}
+
 function assertConfig(cfg: AmiConfig | null | undefined): asserts cfg is AmiConfig {
   if (!cfg?.amiUser || !cfg?.amiPass) throw new Error('AMI config missing: user and password required');
 }
@@ -29,13 +50,21 @@ export async function startAmiClient(config?: AmiConfig | null): Promise<void> {
 
   client
     .on('connect', () => console.info('AMI connected'))
-    .on('disconnect', () => console.warn('AMI disconnected'))
+    .on('disconnect', () => {
+      activeChannelsByCall.clear();
+      console.warn('AMI disconnected');
+    })
     .on('reconnection', () => console.warn('AMI reconnecting...'))
     .on('internalError', (err: unknown) => console.error('AMI internal error', err));
 
   client.on('event', async (evt: unknown) => {
     const e = evt as Record<string, unknown>;
     const eventType = (e.Event || e.event || 'UnknownEvent') as string;
+    const uniqueid = (e.Uniqueid as string) || null;
+    const linkedid = (e.Linkedid as string) || null;
+    if (eventType === 'Newchannel') {
+      trackChannelUp(linkedid, uniqueid);
+    }
     if (eventType === 'Cdr') {
       const uniqueid = (e.Uniqueid ?? e.uniqueid) as string | undefined;
       if (uniqueid) {
@@ -60,8 +89,6 @@ export async function startAmiClient(config?: AmiConfig | null): Promise<void> {
         }
       }
     }
-    const uniqueid = (e.Uniqueid as string) || null;
-    const linkedid = (e.Linkedid as string) || null;
     const cid = await repoCalls.getOrCreateCallIdByAsteriskIds(pool, uniqueid, linkedid);
     await repoEvents.insertEvent(pool, cid, 'ami', eventType, e);
     broadcastEvent(
@@ -73,6 +100,7 @@ export async function startAmiClient(config?: AmiConfig | null): Promise<void> {
     const e = evt as Record<string, unknown>;
     const uniqueid = (e.Uniqueid as string) || null;
     const linkedid = (e.Linkedid as string) || null;
+    trackChannelDown(linkedid, uniqueid);
     const cid = await repoCalls.getOrCreateCallIdByAsteriskIds(pool, uniqueid, linkedid);
     await repoCalls.updateCallByAsteriskIds(pool, uniqueid, linkedid, {
       status: 'ended',

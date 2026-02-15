@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { DataGrid, GridColDef, GridRowParams } from '@mui/x-data-grid';
-import { Box, Typography, TextField, Stack, Button } from '@mui/material';
+import { Box, Typography, TextField, Stack, Button, Chip } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { getCalls } from '../api/client';
+import { getCalls, getAsteriskChannelStats } from '../api/client';
 
 export default function Calls() {
   const navigate = useNavigate();
@@ -16,6 +16,13 @@ export default function Calls() {
     queryKey: ['calls', from, to, status],
     queryFn: () => getCalls({ from: from || undefined, to: to || undefined, status: status || undefined }),
     refetchOnWindowFocus: true,
+  });
+
+  const { data: channelStats } = useQuery({
+    queryKey: ['asterisk-channel-stats'],
+    queryFn: getAsteriskChannelStats,
+    staleTime: 10_000,
+    retry: false,
   });
 
   const columns: GridColDef[] = [
@@ -45,6 +52,13 @@ export default function Calls() {
           Refresh
         </Button>
       </Stack>
+      {channelStats != null && (
+        <Stack direction="row" spacing={1} sx={{ mb: 2 }} flexWrap="wrap">
+          <Chip size="small" label={`${channelStats.activeChannels} active channels`} variant="outlined" />
+          <Chip size="small" label={`${channelStats.activeCalls} active call`} variant="outlined" color="primary" />
+          <Chip size="small" label={`${channelStats.callsProcessed} calls processed`} variant="outlined" />
+        </Stack>
+      )}
       <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap">
         <TextField
           size="small"
