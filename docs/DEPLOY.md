@@ -73,3 +73,4 @@ The server must be able to clone:
 ```bash
 ssh user@your-server "cd /opt/astriks && sudo docker compose ps"
 ```
+okey 
