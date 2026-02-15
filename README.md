@@ -24,6 +24,20 @@ Migrations 001, 002, 003 run automatically on first MySQL start. Configure ARI/A
 
 **Commands**: `make up` \| `make down` \| `make logs` \| `make run`
 
+## Automatic deployment (GitHub Actions)
+
+Push to `main` auto-deploys via SSH. Add these **GitHub Secrets** (Settings → Secrets → Actions):
+
+| Secret | Description |
+|--------|-------------|
+| `DEPLOY_HOST` | Server IP or hostname |
+| `DEPLOY_USER` | SSH username |
+| `DEPLOY_SSH_KEY` | SSH private key (full content) |
+| `DEPLOY_PORT` | SSH port (default: 22) |
+| `DEPLOY_PATH` | Path on server (default: /opt/astriks) |
+
+See [docs/DEPLOY.md](docs/DEPLOY.md) for setup.
+
 ## Admin panel
 
 | Page       | Route       | Description                                      |
@@ -90,6 +104,7 @@ Copy `.env.example` to `.env` and set `ARI_*`, `AMI_*`, `MYSQL_*`. For local MyS
 ├── migrations/      # 001 initial, 002 asterisk_settings, 003 SSH
 ├── docs/
 │   ├── asterisk/    # Config samples (ari, manager, pjsip, extensions, http)
+│   ├── DEPLOY.md    # Auto-deploy setup (GitHub Actions + SSH)
 │   └── SIP-TRUNK-AND-DID.md
 ├── no_need/         # Reference materials (not required for run)
 ├── docker-compose.yml
