@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import type { Pool, RowDataPacket } from 'mysql2/promise';
 import type { Call, ListCallsFilters } from '../types';
 
@@ -182,6 +183,25 @@ export async function ensureCallExists(
     direction: 'unknown',
     started_at: new Date(),
   });
+}
+
+/** Get or create a call row for this Asterisk channel (so each live call has its own row). */
+export async function getOrCreateCallIdByAsteriskIds(
+  pool: Pool,
+  uniqueid: string | null,
+  linkedid: string | null
+): Promise<string> {
+  const existing = await resolveCallIdFromAsteriskIds(pool, uniqueid, linkedid);
+  if (existing) return existing;
+  const callId = uuidv4();
+  await upsertCall(pool, callId, {
+    status: 'unknown',
+    direction: 'unknown',
+    asterisk_uniqueid: uniqueid,
+    asterisk_linkedid: linkedid,
+    started_at: new Date(),
+  });
+  return callId;
 }
 
 export async function resolveCallIdFromAsteriskIds(

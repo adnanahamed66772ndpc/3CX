@@ -28,7 +28,11 @@ export default function LiveEvents() {
         // ignore
       }
     };
-    return () => ws.close();
+    return () => {
+      if (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
   }, []);
 
   return (

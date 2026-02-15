@@ -76,10 +76,10 @@ export default function CallDetail() {
       {tab === 0 && (
         <Card sx={{ mb: 2 }}>
           <CardContent>
-            <Typography variant="body2" color="textSecondary">
+            <Typography component="div" variant="body2" color="textSecondary">
               Status: <Chip label={call.status} size="small" /> | A: {call.a_endpoint ?? '-'} | B: {call.b_endpoint ?? '-'}
             </Typography>
-            <Typography variant="body2">
+            <Typography component="div" variant="body2">
               Started: {call.started_at ? new Date(call.started_at).toLocaleString() : '-'} | Ended:{' '}
               {call.ended_at ? new Date(call.ended_at).toLocaleString() : '-'}
             </Typography>
@@ -102,16 +102,17 @@ export default function CallDetail() {
               <ListItem key={ev.id}>
                 <ListItemText
                   primary={
-                    <>
+                    <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
                       <Chip label={ev.source} size="small" sx={{ mr: 1 }} />
                       {ev.event_type} @ {new Date(ev.event_time).toLocaleString()}
-                    </>
+                    </Box>
                   }
                   secondary={
                     <Box component="pre" sx={{ fontSize: 12, overflow: 'auto', maxHeight: 120 }}>
                       {JSON.stringify(ev.payload_json, null, 2)}
                     </Box>
                   }
+                  secondaryTypographyProps={{ component: 'div' }}
                 />
               </ListItem>
             ))}

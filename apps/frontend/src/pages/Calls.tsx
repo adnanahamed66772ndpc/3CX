@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { DataGrid, GridColDef, GridRowParams } from '@mui/x-data-grid';
-import { Box, Typography, TextField, Stack } from '@mui/material';
+import { Box, Typography, TextField, Stack, Button } from '@mui/material';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { getCalls } from '../api/client';
 
 export default function Calls() {
@@ -11,9 +12,10 @@ export default function Calls() {
   const [to, setTo] = useState('');
   const [status, setStatus] = useState('');
 
-  const { data: calls, isLoading, error } = useQuery({
+  const { data: calls, isLoading, error, refetch } = useQuery({
     queryKey: ['calls', from, to, status],
     queryFn: () => getCalls({ from: from || undefined, to: to || undefined, status: status || undefined }),
+    refetchOnWindowFocus: true,
   });
 
   const columns: GridColDef[] = [
@@ -37,9 +39,12 @@ export default function Calls() {
 
   return (
     <Box>
-      <Typography variant="h5" gutterBottom>
-        Calls
-      </Typography>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" sx={{ mb: 2 }}>
+        <Typography variant="h5">Calls</Typography>
+        <Button startIcon={<RefreshIcon />} onClick={() => refetch()} disabled={isLoading} size="small">
+          Refresh
+        </Button>
+      </Stack>
       <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap">
         <TextField
           size="small"
