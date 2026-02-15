@@ -172,6 +172,18 @@ export async function resolveCallIdByActionId(
   return rows?.[0]?.call_id ?? null;
 }
 
+/** Ensure a call row exists for the given call_id (e.g. for unknown/AMI-only calls). */
+export async function ensureCallExists(
+  pool: Pool,
+  callId: string
+): Promise<void> {
+  await upsertCall(pool, callId, {
+    status: 'unknown',
+    direction: 'unknown',
+    started_at: new Date(),
+  });
+}
+
 export async function resolveCallIdFromAsteriskIds(
   pool: Pool,
   uniqueid: string | null,

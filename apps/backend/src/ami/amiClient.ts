@@ -40,7 +40,8 @@ export async function startAmiClient(config?: AmiConfig | null): Promise<void> {
       (e.Uniqueid as string) || null,
       (e.Linkedid as string) || null
     );
-    const cid = callId || 'unknown';
+    const cid = callId || '00000000-0000-0000-0000-000000000000';
+    await repoCalls.ensureCallExists(pool, cid);
     await repoEvents.insertEvent(pool, cid, 'ami', eventType, e);
     broadcastEvent(
       getLiveEventPayload(cid, 'ami', eventType, new Date(), String(e.Uniqueid || e.Linkedid || ''))
@@ -58,7 +59,8 @@ export async function startAmiClient(config?: AmiConfig | null): Promise<void> {
       hangup_cause: e.Cause != null ? Number(e.Cause) : null,
       hangup_cause_txt: (e['Cause-txt'] as string) || null,
     });
-    const cid = callId || 'unknown';
+    const cid = callId || '00000000-0000-0000-0000-000000000000';
+    await repoCalls.ensureCallExists(pool, cid);
     await repoEvents.insertEvent(pool, cid, 'ami', 'Hangup', e);
     broadcastEvent(getLiveEventPayload(cid, 'ami', 'Hangup', new Date(), `cause ${e.Cause || ''}`));
   });

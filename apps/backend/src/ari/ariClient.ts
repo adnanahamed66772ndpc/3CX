@@ -1,4 +1,6 @@
-import ari from 'ari-client';
+// ari-client exports connect, not default
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const ariConnect = require('ari-client').connect as (url: string, user: string, pass: string) => Promise<unknown>;
 import { v4 as uuidv4 } from 'uuid';
 import type { Pool } from 'mysql2/promise';
 import pool from '../db/pool';
@@ -7,10 +9,10 @@ import * as repoEvents from '../db/repoEvents';
 import { broadcastEvent, getLiveEventPayload } from '../realtime/ws';
 import type { AriConfig } from '../config/asteriskConfig';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AriClientType = any;
+
 let currentCfg: AriConfig | null = null;
-
-export type AriClientType = Awaited<ReturnType<typeof ari>>;
-
 let ariClientInstance: AriClientType | null = null;
 
 interface CallState {
@@ -92,7 +94,7 @@ export async function startAriClient(config?: AriConfig | null): Promise<void> {
   assertConfig(cfg);
   currentCfg = cfg;
 
-  const client = await ari(cfg.ariUrl, cfg.ariUser, cfg.ariPass);
+  const client = (await ariConnect(cfg.ariUrl, cfg.ariUser, cfg.ariPass)) as AriClientType;
   ariClientInstance = client;
 
   client.on('WebSocketReconnecting', (err: unknown) =>
@@ -143,7 +145,9 @@ export async function startAriClient(config?: AriConfig | null): Promise<void> {
     const e = event as { args?: unknown[] };
     const ch = channel as { id: string };
     const callId = extractCallId(e);
-    await repoEvents.insertEvent(pool, callId || 'unknown', 'ari', 'StasisEnd', {
+    const cid = callId || '00000000-0000-0000-0000-000000000000';
+    await repoCalls.ensureCallExists(pool, cid);
+    await repoEvents.insertEvent(pool, cid, 'ari', 'StasisEnd', {
       event: { args: e?.args },
       channel: safeChannel(ch),
     });
