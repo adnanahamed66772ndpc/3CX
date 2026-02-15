@@ -1,22 +1,16 @@
 # Automatic Deployment (GitHub Actions + Docker)
 
-Push to `main` triggers automatic deployment to your server via SSH.
+Push to `main` triggers automatic deployment via SSH. Works on **fresh Ubuntu 24** with nothing pre-installed.
 
-## 1. Server Requirements
+## Server Requirements
 
-- Linux server with Docker and Docker Compose
+- **Ubuntu 24.x** (stock OS, nothing else needed)
 - SSH access (password or key)
-- Git (for clone/pull)
+- Internet connection
 
-```bash
-# On Ubuntu/Debian
-sudo apt update
-sudo apt install -y docker.io docker-compose git
-sudo usermod -aG docker $USER
-# Log out and back in
-```
+The workflow installs Docker, Docker Compose, and Git on first run.
 
-## 2. Add GitHub Secrets
+## 1. Add GitHub Secrets
 
 Go to **GitHub repo → Settings → Secrets and variables → Actions** and add:
 
@@ -27,7 +21,7 @@ Go to **GitHub repo → Settings → Secrets and variables → Actions** and add
 | `DEPLOY_SSH_KEY` | ✅ | SSH private key (paste entire contents of `id_rsa` or `id_ed25519`) |
 | `DEPLOY_PORT` | | SSH port (default: `22`) |
 | `DEPLOY_PATH` | | Path on server (default: `/opt/astriks`) |
-| `DEPLOY_GIT_URL` | | Clone URL for private repos (e.g. `git@github.com:user/repo.git`) |
+| `DEPLOY_GIT_URL` | | For private repos: `git@github.com:user/repo.git` |
 
 ### SSH Key Setup
 
@@ -36,44 +30,46 @@ Go to **GitHub repo → Settings → Secrets and variables → Actions** and add
    ssh-keygen -t ed25519 -C "deploy" -f deploy_key -N ""
    ```
 
-2. Add **public** key (`deploy_key.pub`) to the server:
+2. Add **public** key (`deploy_key.pub`) to the VPS:
    ```bash
    ssh-copy-id -i deploy_key.pub user@your-server
    ```
 
 3. Add **private** key (`deploy_key`) to `DEPLOY_SSH_KEY` secret (copy full content including `-----BEGIN ... KEY-----` and `-----END ... KEY-----`).
 
-## 3. First-Time Server Setup
-
-SSH into your server and create the deploy directory:
-
-```bash
-sudo mkdir -p /opt/astriks
-sudo chown $USER:$USER /opt/astriks
-```
-
-Create `.env` in that folder (for ARI/AMI/MySQL):
-
-```bash
-cd /opt/astriks
-cp .env.example .env
-nano .env   # Edit ARI_*, AMI_*, MYSQL_* as needed
-```
-
-For **private** repos, the server must be able to clone:
-- **Option A**: Add the server's SSH public key as a Deploy Key (Repo → Settings → Deploy keys), then set secret `DEPLOY_GIT_URL` = `git@github.com:USER/REPO.git`
-- **Option B**: On the server, run `git config --global credential.helper store` and do one manual clone with your token
-
-## 4. Deploy
+## 2. First Deploy
 
 - **Automatic**: Push to `main` branch
 - **Manual**: Repo → Actions → "Deploy to Server" → Run workflow
 
+No manual setup on the VPS. The workflow will:
+
+1. Install Docker + Docker Compose (if missing)
+2. Install Git (if missing)
+3. Clone the repo (or pull if already cloned)
+4. Create `.env` from `.env.example` (if missing)
+5. Run `docker compose up -d --build`
+
+## 3. After Deploy
+
+- **Frontend**: http://YOUR_SERVER_IP:5173
+- **Backend**: http://YOUR_SERVER_IP:3000
+
+Configure ARI/AMI/MySQL in **Settings** (in the app) or edit `.env` on the server:
+
+```bash
+ssh user@your-server "cd /opt/astriks && nano .env"
+```
+
+## 4. Private Repos
+
+The server must be able to clone:
+
+- **Option A**: Add the server's SSH public key as a Deploy Key (Repo → Settings → Deploy keys), then set secret `DEPLOY_GIT_URL` = `git@github.com:USER/REPO.git`
+- **Option B**: On the server, run `git config --global credential.helper store` and do one manual clone with your token
+
 ## 5. Verify
 
 ```bash
-ssh user@your-server "cd /opt/astriks && docker compose ps"
+ssh user@your-server "cd /opt/astriks && sudo docker compose ps"
 ```
-
-- Frontend: http://YOUR_SERVER_IP:5173  
-- Backend: http://YOUR_SERVER_IP:3000  

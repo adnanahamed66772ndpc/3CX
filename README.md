@@ -26,7 +26,7 @@ Migrations 001, 002, 003 run automatically on first MySQL start. Configure ARI/A
 
 ## Automatic deployment (GitHub Actions)
 
-Push to `main` auto-deploys via SSH. Add these **GitHub Secrets** (Settings → Secrets → Actions):
+Push to `main` auto-deploys via SSH. Works on **fresh Ubuntu 24** VPS (nothing pre-installed). Add these **GitHub Secrets** (Settings → Secrets → Actions):
 
 | Secret | Description |
 |--------|-------------|
